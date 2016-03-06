@@ -38,7 +38,7 @@ import javax.swing.filechooser.FileFilter;
 import saman.image.ImageViewer;
 
 /**
- *
+ * Creates equirectangular globe map from VRML globe model
  * @author saman
  */
 public class VRML2Equirect extends javax.swing.JFrame implements MouseListener {
@@ -56,6 +56,8 @@ public class VRML2Equirect extends javax.swing.JFrame implements MouseListener {
     public void mouseEntered(MouseEvent e) {}
     public void mouseExited(MouseEvent e) {}
     public void mouseClicked(MouseEvent e) {
+        // mouse click listener
+        // Aligns pole or prime meridian to the selected point
         Point p=latLonPreview.getImageCoord(e.getPoint());
         Dimension s=latLonPreview.getImageSize();
         double fi=90-(double)p.y*180/s.height;
@@ -244,6 +246,8 @@ public class VRML2Equirect extends javax.swing.JFrame implements MouseListener {
         double ax=0,ay=0,az=0,minx=Double.POSITIVE_INFINITY,miny=minx,minz=minx,maxx=-minx,maxy=maxx,maxz=maxx;
         double r,r2;
         // find best fitting sphere
+        //
+        // find average coordinates and bounding box
         for (int i=0;i<pointsX.size();i++) {
             ax+=pointsX.get(i);
             ay+=pointsY.get(i);
@@ -255,14 +259,17 @@ public class VRML2Equirect extends javax.swing.JFrame implements MouseListener {
             if (minz>pointsZ.get(i)) minz=pointsZ.get(i);
             if (maxz<pointsZ.get(i)) maxz=pointsZ.get(i);
         }
+        // ax,ay,az: average coords
         ax/=pointsX.size();ay/=pointsY.size();az/=pointsZ.size();
+        // ax2,ay2,az2: centre of bounding box
         double ax2=(minx+maxx)/2;
         double ay2=(miny+maxy)/2;
         double az2=(minz+maxz)/2;
         r=(maxx-minx)/2;
         r2=(maxy-miny)/2;
         log(ax+" "+ay+" "+az+" - "+ax2+" "+ay2+" "+az2);
-        // estimating best fitting sphere with Nelder-Mead...
+        // estimating best fitting sphere with Nelder-Mead method
+        // initial simplex is generated from averaged point coordinates and bounding box
         double [] est=new double[6];
         double[][] pts={{ax,ay,az,r},{ax2,ay,az,r},{ax,ay2,az,r},{ax,ay,az2,r},{ax,ay,az,r2}};
         double eprev;
@@ -367,10 +374,10 @@ public class VRML2Equirect extends javax.swing.JFrame implements MouseListener {
                 if (lc<-PI) lc+=2*PI;
                 if (lc>PI) lc-=2*PI;                
             }
-            //pixel coords for lon/lat
+            // pixel coords for lon/lat
             fi[i]=(PI/2-fc)*h/PI;
             la[i]=(PI+lc)*w/2/PI;
-            //pixel coords for north polar azimuthal
+            // pixel coords for north polar azimuthal
             Nx[i]=azw/2+(PI/2-fc)*sin(lc)*azw/PI*2;
             Ny[i]=azw/2+(PI/2-fc)*cos(lc)*azw/PI*2;
             //pixel coords for south polar azimuthal
@@ -461,7 +468,7 @@ public class VRML2Equirect extends javax.swing.JFrame implements MouseListener {
                 log("Error writing image file.");
                 return;
             }
-            log(cnt+" háromszög hibás koordinátákkal");
+            log(cnt+" triangle(s) with wrong coordinates.");
             log("lat/lon texture created in file "+outTexFn);        
             latLonPreview.setImage(outImg);
         } catch (Exception e) {
@@ -504,23 +511,23 @@ public class VRML2Equirect extends javax.swing.JFrame implements MouseListener {
         double[][] A=new double[n][n];
         double[] b=new double[n];        
         int i,j,k;
-        // bejövő adatok másolása helyi tömbökbe
+        // copy to local array
         for(i=0;i<n;i++) {
             b[i]=bbe[i];
             for(j=0;j<n;j++)
                 A[i][j]=Abe[i][j];
         }
-        // elimináció
+        // Gaussian elimination
         for(i=0;i<n-1;i++) {
-            // ha A[i][i]==0, keresünk egy olyan későbbi j. sort, ahol A[j][i]!=0
+            // if A[i][i]==0, find row j where A[j][i]!=0
             for(j=i;j<n&&A[j][i]==0;j++);
-            // és ha van ilyen, a két sort felcseréljük
-            if (j>i) { // A[i][i]==0, thát cserélni kell
-                if (j>=n) { // j túlfutott n-en, tehát csupa 0 együttható
-                    System.err.println("Baj van, kilépek!");
+            // if exists, swap rows
+            if (j>i) { // A[i][i]==0, so we have to swap
+                if (j>=n) { // j is over n, so all coefficients are 0
+                    System.err.println("Houston, we have problem!");
                     return null;
                 }
-                else {// A[j][i]!=0, úgyhogy csere
+                else {// A[j][i]!=0, so let's swap
                     for(k=i;k<n;k++) {
                         double cs=A[i][k];A[i][k]=A[j][k];A[j][k]=cs;
                     }
@@ -529,13 +536,13 @@ public class VRML2Equirect extends javax.swing.JFrame implements MouseListener {
             }
             for(j=i+1;j<n;j++) {
                 double h=A[j][i]/A[i][i];
-                A[j][i]=0; // igazából A[j][i]-=A[i][i]*h, de ebből 0 lesz.
+                A[j][i]=0; // really A[j][i]-=A[i][i]*h, but it means 0.
                 for(k=i+1;k<n;k++)
                     A[j][k]-=A[i][k]*h;
                 b[j]-=b[i]*h;
             }
         }
-        // visszahelyettesítésekkel megkapjuk az ismeretleneket
+        // substituting back
         for(i=n-1;i>=0;i--) {
             b[i]/=A[i][i];
             A[i][i]=1;
@@ -544,7 +551,7 @@ public class VRML2Equirect extends javax.swing.JFrame implements MouseListener {
                 A[j][i]=0;
             }
         }
-        // az ismeretlenek a b vektorba kerültek
+        // solution is in vector b
         return b;
     }
     
@@ -566,7 +573,7 @@ public class VRML2Equirect extends javax.swing.JFrame implements MouseListener {
     // read and parse wrl file
     private boolean readWrl(File f) {
 
-        String agiWrlFn=f.getPath(); //"h:/vgm/blaeu_kom/auto/16k.wrl";
+        String agiWrlFn=f.getPath();
         String fn=f.getName();
         log("Opening "+agiWrlFn+"...");
 
