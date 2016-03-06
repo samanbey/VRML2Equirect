@@ -41,12 +41,12 @@ import saman.image.ImageViewer;
  *
  * @author saman
  */
-public class TransformGlobeFrame extends javax.swing.JFrame implements MouseListener {
+public class VRML2Equirect extends javax.swing.JFrame implements MouseListener {
 
     /**
      * Creates new form TransformGlobeFrame
      */
-    public TransformGlobeFrame() {
+    public VRML2Equirect() {
         initComponents();
     }
     
@@ -760,20 +760,21 @@ public class TransformGlobeFrame extends javax.swing.JFrame implements MouseList
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(TransformGlobeFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(VRML2Equirect.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(TransformGlobeFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(VRML2Equirect.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(TransformGlobeFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(VRML2Equirect.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(TransformGlobeFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(VRML2Equirect.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
         //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new TransformGlobeFrame().setVisible(true);
+                new VRML2Equirect().setVisible(true);
             }
         });
     }
